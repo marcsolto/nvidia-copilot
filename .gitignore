@@ -2,6 +2,7 @@ node_modules/
 dist/
 out/
 .vscode/
+.vscode-test/
 *.log
 npm-debug.log*
 .yarn-error.log*

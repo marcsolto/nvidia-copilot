@@ -10,7 +10,7 @@ type NvidiaResponse = {
 
 export function activate(context: vscode.ExtensionContext) {
 
-	let disposable = vscode.commands.registerCommand('nvidia.chat', async () => {
+	let disposable = vscode.commands.registerCommand('nvidia.copilot', async () => {
 
 		const editor = vscode.window.activeTextEditor;
 		const documentText = editor?.document.getText();

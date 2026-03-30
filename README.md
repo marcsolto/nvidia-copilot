@@ -1,105 +1,83 @@
-# nvidia-copilot README
-
-This is the README for your extension "nvidia-copilot". After writing up a brief description, we recommend including the following sections.
-
-## Features
-
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
-
-For example if there is an image subfolder under your extension project workspace:
-
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
-
-## Requirements
-
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
-
-## Extension Settings
-
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
 # NVIDIA Copilot VS Code Extension
 
-Extensão VS Code para integrar com a API NVIDIA Chat Completions.
+A VS Code extension that integrates with NVIDIA Chat Completions API to answer questions about your code.
 
-## 🚀 Instalação
+## 🚀 Installation
 
-1. clone o repositório
+1. Clone the repository:
 
 ```bash
-git clone https://github.com/SEU_USUARIO/nvidia-copilot.git
+git clone https://github.com/marcsolto/nvidia-copilot.git
 cd nvidia-copilot
 ```
 
-2. Instale as dependências
+2. Install dependencies:
 
 ```bash
 npm install
 ```
 
-3. Compile
+3. Build the extension:
 
 ```bash
 npm run compile
 ```
 
-4. Execute em modo de depuração
+4. Start debugging in VS Code:
 
-- No VS Code, pressione `F5` para abrir um novo Extension Host.
+- Press `F5` to launch a new Extension Development Host.
 
-## ⚙️ Configuração
+## ⚙️ Configuration
 
-No `settings.json`, adicione:
+Add this to your `settings.json`:
 
 ```json
 {
-	"nvidiaCopilot.apiKey": "SEU_API_KEY_NVIDIA",
-	"nvidiaCopilot.model": "meta/llama3-70b-instruct"
+  "nvidiaCopilot.apiKey": "YOUR_NVIDIA_API_KEY",
+  "nvidiaCopilot.model": "meta/llama3-70b-instruct"
 }
 ```
 
-- `nvidiaCopilot.apiKey` (obrigatório): chave API NVIDIA.
-- `nvidiaCopilot.model` (opcional): modelo a ser usado; padrão `meta/llama3-70b-instruct`.
+- `nvidiaCopilot.apiKey` (required): your NVIDIA API key.
+- `nvidiaCopilot.model` (optional): model to use (default: `meta/llama3-70b-instruct`).
 
-## ▶️ Uso
+## ▶️ Usage
 
-1. Abra um arquivo de código no VS Code.
-2. Execute o comando `nvidia.chat` (Command Palette: `Ctrl+Shift+P`).
-3. Digite sua pergunta e confirme.
-4. A extensão envia a pergunta + contexto para a API NVIDIA e mostra a resposta.
+1. Open a code file in VS Code.
+2. Run command `nvidia.copilot` (Command Palette: `Ctrl+Shift+P`).
+3. Enter your question and submit.
+4. The extension sends the question + context to NVIDIA API and shows the response.
 
-## 📦 Arquivos principais
+## 📦 Key files
 
-- `src/extension.ts`: implementação do comando, leitura de config, chamada HTTP e resposta.
-- `src/test/extension.test.ts`: teste boilerplate.
-- `package.json`: contribuições, scripts, dependências e ativação (`onCommand:nvidia.chat`).
+- `src/extension.ts`: command implementation, configuration reading, API call, and response handling.
+- `src/test/extension.test.ts`: boilerplate test.
+- `package.json`: contribution points, scripts, dependencies, and activation (`onCommand:nvidia.copilot`).
 
-## 🧪 Testes
+## 🧪 Tests
 
 ```bash
 npm run test
 ```
 
-## 🛠️ Scripts úteis
+## 🛠️ Useful scripts
 
 - `npm run lint`
 - `npm run check-types`
 - `npm run watch`
 
-## 🔧 Comportamento atual
+## 🔍 Current behavior
 
-- valida `apiKey` antes da chamada;
-- usa modelo de config ou padrão;
-- inclui prompt do usuário e contextos:
-	- texto inteiro do documento;
-	- seleção de texto, se houver;
-- mostra erro em caso de falha de API.
+- validates `apiKey` before sending request;
+- uses configured model or default;
+- includes user prompt and context:
+  - full document text;
+  - selected text (if available);
+- shows error message on API failure.
 
-## 💡 Melhorias futuras
+## 💡 Future improvements
 
-- histórico de conversas;
-- opções de prompt system + assistant;
-- suporte a mensageria assincrona e fallback de rede;
-- paginação/recorte de arquivo para evitar payloads muito grandes.
+- conversation history support;
+- system + assistant prompt options;
+- async queueing and network retry/fallback;
+- chunking large files to avoid huge payloads.

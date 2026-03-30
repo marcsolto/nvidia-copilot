@@ -10,7 +10,7 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:nvidia.chat"
+    "onCommand:nvidia.copilot"
   ],
   "main": "./dist/extension.js",
   "contributes": {
