@@ -65,3 +65,27 @@ export async function chat(apiKey: string, model: string, messages: any[], onTok
 
     return fullText;
 }
+
+export async function complete(apiKey: string, model: string, prompt: string): Promise<string> {
+    const response = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            model,
+            messages: [{ role: "user", content: prompt }],
+            stream: false,
+            max_tokens: 64,
+            stop: ["\n", "```"]
+        })
+    });
+
+    if (!response.ok) {
+        throw new Error(`NVIDIA API Error: ${response.status}`);
+    }
+
+    const data = await response.json() as any;
+    return data.choices?.[0]?.message?.content || "";
+}

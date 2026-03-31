@@ -1,13 +1,14 @@
 {
   "name": "nvidia-copilot",
-  "displayName": "nvidia-copilot",
-  "description": "nvidia-copilot, use your nvidia api key",
+  "displayName": "NVIDIA Copilot",
+  "description": "AI-powered coding assistant using NVIDIA's models",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.106.0"
   },
   "categories": [
-    "Other"
+    "AI",
+    "Programming Languages"
   ],
   "activationEvents": [],
   "main": "./dist/extension.js",
@@ -18,12 +19,17 @@
         "nvidiaCopilot.apiKey": {
           "type": "string",
           "default": "",
-          "description": "API Key da NVIDIA"
+          "description": "NVIDIA API Key"
         },
         "nvidiaCopilot.model": {
           "type": "string",
           "default": "meta/llama3-70b-instruct",
-          "description": "Modelo NVIDIA para chat completions"
+          "description": "NVIDIA model for chat completions"
+        },
+        "nvidiaCopilot.enableInlineSuggestions": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable inline code suggestions (Ghost Text)"
         }
       }
     },
@@ -35,6 +41,10 @@
       {
         "command": "nvidia.listModels",
         "title": "NVIDIA: List available models"
+      },
+      {
+        "command": "nvidia.setApiKey",
+        "title": "NVIDIA: Set API Key"
       }
     ]
   },

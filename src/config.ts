@@ -10,3 +10,8 @@ export function getModel(): string {
 	const config = vscode.workspace.getConfiguration("nvidiaCopilot");
 	return config.get<string>("model") || "meta/llama3-70b-instruct";
 }
+
+export function isInlineSuggestionsEnabled(): boolean {
+	const config = vscode.workspace.getConfiguration("nvidiaCopilot");
+	return config.get<boolean>("enableInlineSuggestions") ?? true;
+}

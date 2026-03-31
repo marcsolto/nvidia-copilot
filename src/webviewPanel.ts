@@ -19,7 +19,7 @@ export function createChatPanel(): vscode.WebviewPanel {
 function getWebviewContent(): string {
 	return `
 	<!DOCTYPE html>
-	<html lang="pt-br">
+	<html lang="en">
 	<head>
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -67,7 +67,7 @@ function getWebviewContent(): string {
 	<body>
 		<h2>NVIDIA Copilot</h2>
 		<div id="chat">
-			<div class="message assistant">🤖 Olá! Como posso ajudar com seu código hoje?</div>
+			<div class="message assistant">🤖 Hello! How can I help with your code today?</div>
 		</div>
 		<script>
 			const chatContainer = document.getElementById('chat');
