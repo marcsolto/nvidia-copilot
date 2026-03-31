@@ -48,11 +48,16 @@ Add this to your `settings.json`:
 3. Enter your question and submit.
 4. The extension sends the question + context to NVIDIA API and shows the response.
 
+### Listing Available Models
+
+- Run command `nvidia.listModels` to fetch and select from available NVIDIA models.
+- The selected model will be set in your `nvidiaCopilot.model` configuration.
+
 ## 📦 Key files
 
 - `src/extension.ts`: command implementation, configuration reading, API call, and response handling.
 - `src/test/extension.test.ts`: boilerplate test.
-- `package.json`: contribution points, scripts, dependencies, and activation (`onCommand:nvidia.copilot`).
+- `package.json`: contribution points, scripts, dependencies, and activation (`onCommand:nvidia.copilot`, `onCommand:nvidia.listModels`).
 
 ## 🧪 Tests
 

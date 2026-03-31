@@ -10,7 +10,8 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:nvidia.copilot"
+    "onCommand:nvidia.copilot",
+    "onCommand:nvidia.listModels"
   ],
   "main": "./dist/extension.js",
   "contributes": {
