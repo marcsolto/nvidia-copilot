@@ -89,3 +89,27 @@ export async function complete(apiKey: string, model: string, prompt: string): P
     const data = await response.json() as any;
     return data.choices?.[0]?.message?.content || "";
 }
+
+export async function getEmbeddings(apiKey: string, input: string | string[]): Promise<number[][]> {
+    const response = await fetch("https://integrate.api.nvidia.com/v1/embeddings", {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            model: "nvidia/llama-3.2-nv-embedqc-1b-v1", // Using a standard NVIDIA embedding NIM
+            input: Array.isArray(input) ? input : [input],
+            input_type: "query",
+            encoding_format: "float"
+        })
+    });
+
+    if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`NVIDIA Embeddings Error: ${response.status} - ${text}`);
+    }
+
+    const data = await response.json() as any;
+    return data.data.map((item: any) => item.embedding);
+}

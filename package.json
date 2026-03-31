@@ -45,6 +45,10 @@
       {
         "command": "nvidia.setApiKey",
         "title": "NVIDIA: Set API Key"
+      },
+      {
+        "command": "nvidia.indexWorkspace",
+        "title": "NVIDIA: Index Workspace (RAG)"
       }
     ]
   },

@@ -4,10 +4,14 @@ import { addUserMessage, addAssistantMessage, getMessages } from './chatHistory'
 import { getApiKey, getModel } from './config';
 import { createChatPanel } from './webviewPanel';
 import { InlineSuggestionProvider } from './inlineSuggestions';
+import { RagService } from './ragService';
 
 let chatPanel: vscode.WebviewPanel | undefined;
+let ragService: RagService;
 
 export function activate(context: vscode.ExtensionContext) {
+
+	ragService = new RagService(context);
 
 	// Register Inline Completion Provider (Ghost Text)
 	const inlineProvider = new InlineSuggestionProvider(context.secrets);
@@ -25,8 +29,21 @@ export function activate(context: vscode.ExtensionContext) {
 			return;
 		}
 
+		// RAG: Search for relevant context across workspace
+		panel.webview.postMessage({ type: 'update', content: "_Searching workspace context..._" });
+		const relevantChunks = await ragService.search(userInput);
+
+		let historyPrompt = userInput;
+		if (relevantChunks.length > 0) {
+			const contextText = relevantChunks
+				.map(c => `File: ${c.filePath}\nContent:\n${c.text}`)
+				.join("\n\n---\n\n");
+
+			historyPrompt = `Context from workspace:\n${contextText}\n\nUser Question: ${userInput}`;
+		}
+
 		// Save to history
-		addUserMessage(userInput);
+		addUserMessage(historyPrompt);
 
 		try {
 			let fullTextResponse = "";
@@ -67,9 +84,9 @@ export function activate(context: vscode.ExtensionContext) {
 			return;
 		}
 
-		// History needs the technical context, but we show simple text in UI
-		const historyPrompt = selectionContext
-			? `${userInput}\n\nCode context:\n\`\`\`\n${selectionContext}\n\`\`\``
+		// Create history prompt with local context (active file)
+		const localPrompt = selectionContext
+			? `${userInput}\n\nActive file context:\n\`\`\`\n${selectionContext}\n\`\`\``
 			: userInput;
 
 		// Create or reuse panel
@@ -79,14 +96,20 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 		chatPanel.reveal(vscode.ViewColumn.Beside);
 
-		// Post user message to UI
+		// Post user message to UI (clean version without technical context)
 		chatPanel.webview.postMessage({ type: 'addMessage', content: userInput, isUser: true });
 
-		// Perform chat
-		await performChat(historyPrompt, chatPanel);
+		// Perform chat with RAG + Local Context
+		await performChat(localPrompt, chatPanel);
 	});
 
 	context.subscriptions.push(disposable);
+
+	// Command to index workspace
+	let indexDisposable = vscode.commands.registerCommand('nvidia.indexWorkspace', async () => {
+		await ragService.indexWorkspace();
+	});
+	context.subscriptions.push(indexDisposable);
 
 	function setupChatPanelListeners(panel: vscode.WebviewPanel) {
 		panel.onDidDispose(() => { chatPanel = undefined; }, null, context.subscriptions);
