@@ -1,88 +1,58 @@
 # NVIDIA Copilot VS Code Extension
 
-A VS Code extension that integrates with NVIDIA Chat Completions API to answer questions about your code.
+An AI-powered coding assistant for VS Code using NVIDIA's high-performance LLMs and Embedding models. Experience a Copilot-like workflow with full workspace awareness.
+
+## ✨ Key Features
+
+- **💬 Multi-turn Chat**: Interactive chat sidebar for continuous conversation.
+- **🔍 RAG (Retrieval-Augmented Generation)**: Semantic search across your entire workspace to provide relevant code context.
+- **💡 Inline Suggestions (Ghost Text)**: Real-time code completions as you type.
+- **🔐 Secure Storage**: Your NVIDIA API Key is stored safely using VS Code's Secret Storage.
+- **⚙️ Model Switching**: Easily list and switch between different NVIDIA models.
 
 ## 🚀 Installation
 
-1. Clone the repository:
-
-```bash
-git clone https://github.com/marcsolto/nvidia-copilot.git
-cd nvidia-copilot
-```
-
-2. Install dependencies:
-
-```bash
-npm install
-```
-
-3. Build the extension:
-
-```bash
-npm run compile
-```
-
-4. Start debugging in VS Code:
-
-- Press `F5` to launch a new Extension Development Host.
+1. **Prerequisites**: Ensure you have [Node.js](https://nodejs.org/) installed.
+2. **Clone and Install**:
+   ```bash
+   git clone https://github.com/marcsolto/nvidia-copilot.git
+   cd nvidia-copilot
+   npm install
+   ```
+3. **Build**:
+   ```bash
+   npm run compile
+   ```
+4. **Run**:
+   - Press `F5` in VS Code to launch the Extension Development Host.
 
 ## ⚙️ Configuration
 
-Add this to your `settings.json`:
-
-```json
-{
-  "nvidiaCopilot.apiKey": "YOUR_NVIDIA_API_KEY",
-  "nvidiaCopilot.model": "meta/llama3-70b-instruct"
-}
-```
-
-- `nvidiaCopilot.apiKey` (required): your NVIDIA API key.
-- `nvidiaCopilot.model` (optional): model to use (default: `meta/llama3-70b-instruct`).
+1. Open the Command Palette (`Ctrl+Shift+P`).
+2. Run **NVIDIA: Set API Key** and enter your key from [NVIDIA Build](https://build.nvidia.com/).
+3. (Optional) Run **NVIDIA: List available models** to select your preferred LLM.
+4. (Optional) Toggle **NVIDIA Copilot: Enable Inline Suggestions** in VS Code Settings.
 
 ## ▶️ Usage
 
-1. Open a code file in VS Code.
-2. Run command `nvidia.copilot` (Command Palette: `Ctrl+Shift+P`).
-3. Enter your question and submit.
-4. The extension sends the question + context to NVIDIA API and shows the response.
+### 🗨️ Chat with AI
+- Run **NVIDIA: Ask about code** from the Command Palette.
+- Use the sidebar to ask questions. The AI will automatically include your active file selection as context.
 
-### Listing Available Models
+### 📂 Workspace Context (RAG)
+- To enable repository-wide awareness, run **NVIDIA: Index Workspace (RAG)**.
+- Once indexed, the AI will perform semantic searches to find relevant snippets from other files in your project.
 
-- Run command `nvidia.listModels` to fetch and select from available NVIDIA models.
-- The selected model will be set in your `nvidiaCopilot.model` configuration.
+### ⌨️ Inline Completions
+- Just start typing in any code file.
+- Press `Tab` to accept a suggestion.
 
-## 📦 Key files
+## 🛠️ Development
 
-- `src/extension.ts`: command implementation, configuration reading, API call, and response handling.
-- `src/test/extension.test.ts`: boilerplate test.
-- `package.json`: contribution points, scripts, dependencies, and activation (`onCommand:nvidia.copilot`, `onCommand:nvidia.listModels`).
+- `npm run watch`: Automatically rebuild on changes.
+- `npm run compile`: Full build and lint.
+- `src/ragService.ts`: Core logic for indexing and search.
+- `src/webviewPanel.ts`: Interactive chat UI.
 
-## 🧪 Tests
-
-```bash
-npm run test
-```
-
-## 🛠️ Useful scripts
-
-- `npm run lint`
-- `npm run check-types`
-- `npm run watch`
-
-## 🔍 Current behavior
-
-- validates `apiKey` before sending request;
-- uses configured model or default;
-- includes user prompt and context:
-  - full document text;
-  - selected text (if available);
-- shows error message on API failure.
-
-## 💡 Future improvements
-
-- conversation history support;
-- system + assistant prompt options;
-- async queueing and network retry/fallback;
-- chunking large files to avoid huge payloads.
+## 📄 License
+MIT

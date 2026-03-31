@@ -44,7 +44,9 @@ export class RagService {
     }
 
     public async indexWorkspace() {
-        if (this.isIndexing) return;
+        if (this.isIndexing) {
+            return;
+        }
         this.isIndexing = true;
 
         const apiKey = await this.context.secrets.get("nvidiaApiKey") || getApiKey();
@@ -104,7 +106,9 @@ export class RagService {
 
     public async search(query: string, topN: number = 3): Promise<Chunk[]> {
         const apiKey = await this.context.secrets.get("nvidiaApiKey") || getApiKey();
-        if (!apiKey || this.chunks.length === 0) return [];
+        if (!apiKey || this.chunks.length === 0) {
+            return [];
+        }
 
         try {
             const queryEmbedding = (await getEmbeddings(apiKey, query))[0];
@@ -158,7 +162,9 @@ export class RagService {
             normA += vecA[i] * vecA[i];
             normB += vecB[i] * vecB[i];
         }
-        if (normA === 0 || normB === 0) return 0;
+        if (normA === 0 || normB === 0) {
+            return 0;
+        }
         return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
     }
 }
