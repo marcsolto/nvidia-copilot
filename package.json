@@ -3,14 +3,25 @@
   "displayName": "NVIDIA Copilot",
   "description": "AI-powered coding assistant using NVIDIA's models",
   "version": "0.0.1",
+  "publisher": "marcsolto",
+  "icon": "icon.png",
   "engines": {
     "vscode": "^1.106.0"
   },
+  "keywords": [
+    "nvidia",
+    "copilot",
+    "ai",
+    "llm",
+    "rag"
+  ],
   "categories": [
     "AI",
     "Programming Languages"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "configuration": {
