@@ -15,23 +15,39 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.languages.registerInlineCompletionItemProvider({ pattern: '**' }, inlineProvider)
 	);
 
-	// Main command: open chat and ask AI
-	let disposable = vscode.commands.registerCommand('nvidia.copilot', async () => {
-		let apiKey = await context.secrets.get("nvidiaApiKey") || getApiKey();
-
+	// Function to handle chat logic (streaming and UI updates)
+	async function performChat(userInput: string, panel: vscode.WebviewPanel) {
+		const apiKey = await context.secrets.get("nvidiaApiKey") || getApiKey();
 		const model = getModel();
 
 		if (!apiKey) {
-			const result = await vscode.window.showErrorMessage(
-				'NVIDIA API Key not configured.',
-				'Configure Now'
-			);
-			if (result === 'Configure Now') {
-				vscode.commands.executeCommand('nvidia.setApiKey');
-			}
+			vscode.window.showErrorMessage('NVIDIA API Key not configured.');
 			return;
 		}
 
+		// Save to history
+		addUserMessage(userInput);
+
+		try {
+			let fullTextResponse = "";
+
+			await chat(apiKey, model, getMessages(), (token: string) => {
+				fullTextResponse += token;
+				panel.webview.postMessage({ type: 'update', content: fullTextResponse });
+			});
+
+			// Save response to history
+			addAssistantMessage(fullTextResponse);
+
+		} catch (error) {
+			const msg = error instanceof Error ? error.message : String(error);
+			vscode.window.showErrorMessage(`NVIDIA API Error: ${msg}`);
+			console.error("Chat error:", error);
+		}
+	}
+
+	// Main command: open chat and ask AI
+	let disposable = vscode.commands.registerCommand('nvidia.copilot', async () => {
 		const editor = vscode.window.activeTextEditor;
 		let selectionContext = "";
 		if (editor) {
@@ -51,45 +67,38 @@ export function activate(context: vscode.ExtensionContext) {
 			return;
 		}
 
-		// Add user question to history with technical context
+		// History needs the technical context, but we show simple text in UI
 		const historyPrompt = selectionContext
 			? `${userInput}\n\nCode context:\n\`\`\`\n${selectionContext}\n\`\`\``
 			: userInput;
 
-		addUserMessage(historyPrompt);
-
-		// Create or reuse chat panel
+		// Create or reuse panel
 		if (!chatPanel) {
 			chatPanel = createChatPanel();
-			chatPanel.onDidDispose(() => { chatPanel = undefined; }, null, context.subscriptions);
+			setupChatPanelListeners(chatPanel);
 		}
 		chatPanel.reveal(vscode.ViewColumn.Beside);
 
-		// Show user message in webview
+		// Post user message to UI
 		chatPanel.webview.postMessage({ type: 'addMessage', content: userInput, isUser: true });
 
-		// Read streaming from IA
-		try {
-			let fullTextResponse = "";
-
-			await chat(apiKey, model, getMessages(), (token: string) => {
-				fullTextResponse += token;
-				chatPanel?.webview.postMessage({ type: 'update', content: fullTextResponse });
-			});
-
-			// Save IA response in history
-			addAssistantMessage(fullTextResponse);
-
-		} catch (error) {
-			const msg = error instanceof Error ? error.message : String(error);
-			vscode.window.showErrorMessage(`NVIDIA API Error: ${msg}`);
-			console.error("Streaming chat error:", error);
-		}
+		// Perform chat
+		await performChat(historyPrompt, chatPanel);
 	});
 
 	context.subscriptions.push(disposable);
 
-	// Command to list available models
+	function setupChatPanelListeners(panel: vscode.WebviewPanel) {
+		panel.onDidDispose(() => { chatPanel = undefined; }, null, context.subscriptions);
+
+		panel.webview.onDidReceiveMessage(async (message) => {
+			if (message.type === 'userMessage') {
+				await performChat(message.value, panel);
+			}
+		}, undefined, context.subscriptions);
+	}
+
+	// Command to list models
 	let listModelsDisposable = vscode.commands.registerCommand('nvidia.listModels', async () => {
 		let apiKey = await context.secrets.get("nvidiaApiKey") || getApiKey();
 		if (!apiKey) {
@@ -132,7 +141,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(listModelsDisposable);
 
-	// Command to configure API key securely
+	// Command for API key
 	let setKeyDisposable = vscode.commands.registerCommand('nvidia.setApiKey', async () => {
 		const key = await vscode.window.showInputBox({
 			prompt: "Enter your NVIDIA API Key",
