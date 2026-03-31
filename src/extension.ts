@@ -2,47 +2,76 @@ import * as vscode from 'vscode';
 import { chat } from './nvidiaClient';
 import { addUserMessage, addAssistantMessage, getMessages } from './chatHistory';
 import { getApiKey, getModel } from './config';
-import { Message } from './types';
 import { createChatPanel } from './webviewPanel';
+
+let chatPanel: vscode.WebviewPanel | undefined;
 
 export function activate(context: vscode.ExtensionContext) {
 
 	// Comando principal: abrir chat e perguntar à IA
 	let disposable = vscode.commands.registerCommand('nvidia.copilot', async () => {
-		const apiKey = getApiKey();
+		let apiKey = await context.secrets.get("nvidiaApiKey") || getApiKey();
+
 		const model = getModel();
 
 		if (!apiKey) {
-			vscode.window.showErrorMessage('Configure sua NVIDIA API Key em Settings: nvidiaCopilot.apiKey');
+			const result = await vscode.window.showErrorMessage(
+				'NVIDIA API Key não configurada.',
+				'Configurar Agora'
+			);
+			if (result === 'Configurar Agora') {
+				vscode.commands.executeCommand('nvidia.setApiKey');
+			}
 			return;
 		}
 
-		const userInput = await vscode.window.showInputBox({
-			prompt: "Pergunte algo sobre seu código"
-		});
-		if (!userInput) return;
+		const editor = vscode.window.activeTextEditor;
+		let selectionContext = "";
+		if (editor) {
+			const selection = editor.selection;
+			if (!selection.isEmpty) {
+				selectionContext = editor.document.getText(selection);
+			} else {
+				selectionContext = editor.document.getText();
+			}
+		}
 
-		// Adicionar pergunta do usuário ao histórico
-		addUserMessage(userInput);
+		const userInput = await vscode.window.showInputBox({
+			prompt: "Pergunte algo sobre seu código",
+			value: ""
+		});
+		if (!userInput) {
+			return;
+		}
+
+		// Adicionar pergunta do usuário ao histórico com contexto técnico (escondido do chat visual se possível)
+		const historyPrompt = selectionContext
+			? `${userInput}\n\nContexto do código:\n\`\`\`\n${selectionContext}\n\`\`\``
+			: userInput;
+
+		addUserMessage(historyPrompt);
 
 		// Criar ou reutilizar painel de chat
-		let panel = vscode.window.activeTextEditor?.document.languageId === 'markdown'
-			? createChatPanel()
-			: vscode.window.createWebviewPanel("nvidiaChat", "NVIDIA Chat", vscode.ViewColumn.Beside, { enableScripts: true });
+		if (!chatPanel) {
+			chatPanel = createChatPanel();
+			chatPanel.onDidDispose(() => { chatPanel = undefined; }, null, context.subscriptions);
+		}
+		chatPanel.reveal(vscode.ViewColumn.Beside);
 
-		let fullText = "";
+		// Mostrar mensagem do usuário no webview (apenas o que ele digitou)
+		chatPanel.webview.postMessage({ type: 'addMessage', content: userInput, isUser: true });
 
 		// Ler streaming da IA
 		try {
-			let fullText = "";
+			let fullTextResponse = "";
 
 			await chat(apiKey, model, getMessages(), (token: string) => {
-				fullText += token;
-				panel.webview.postMessage({ type: 'update', content: fullText });
+				fullTextResponse += token;
+				chatPanel?.webview.postMessage({ type: 'update', content: fullTextResponse });
 			});
 
 			// Salvar resposta da IA no histórico
-			addAssistantMessage(fullText);
+			addAssistantMessage(fullTextResponse);
 
 		} catch (error) {
 			const msg = error instanceof Error ? error.message : String(error);
@@ -55,9 +84,9 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Comando para listar modelos disponíveis
 	let listModelsDisposable = vscode.commands.registerCommand('nvidia.listModels', async () => {
-		const apiKey = getApiKey();
+		let apiKey = await context.secrets.get("nvidiaApiKey") || getApiKey();
 		if (!apiKey) {
-			vscode.window.showErrorMessage('Configure sua NVIDIA API Key em Settings: nvidiaCopilot.apiKey');
+			vscode.window.showErrorMessage('Configure sua NVIDIA API Key primeiro.');
 			return;
 		}
 
@@ -66,16 +95,13 @@ export function activate(context: vscode.ExtensionContext) {
 				method: "GET",
 				headers: {
 					"Authorization": `Bearer ${apiKey}`,
-					"Accept": "application/json",
-					"Content-Type": "application/json"
-				},
-				signal: AbortSignal.timeout(10000)
+					"Accept": "application/json"
+				}
 			});
 
 			if (!response.ok) {
 				const text = await response.text();
-				vscode.window.showErrorMessage(`Erro ao buscar modelos: ${response.status} ${response.statusText} - ${text}`);
-				return;
+				throw new Error(`${response.status} ${response.statusText} - ${text}`);
 			}
 
 			const data = await response.json() as { data: { id: string }[] };
@@ -94,23 +120,21 @@ export function activate(context: vscode.ExtensionContext) {
 		} catch (error) {
 			const msg = error instanceof Error ? error.message : String(error);
 			vscode.window.showErrorMessage(`Erro ao buscar modelos: ${msg}`);
-			console.error("Model fetch error:", error);
 		}
 	});
 
 	context.subscriptions.push(listModelsDisposable);
 
-	// Comando para configurar a API key
+	// Comando para configurar a API key de forma segura
 	let setKeyDisposable = vscode.commands.registerCommand('nvidia.setApiKey', async () => {
 		const key = await vscode.window.showInputBox({
 			prompt: "Digite sua NVIDIA API Key",
-			password: true
+			password: true,
+			ignoreFocusOut: true
 		});
 		if (key) {
 			await context.secrets.store("nvidiaApiKey", key);
-			await vscode.workspace.getConfiguration("nvidiaCopilot")
-				.update("apiKey", key, vscode.ConfigurationTarget.Global);
-			vscode.window.showInformationMessage("API Key salva com sucesso!");
+			vscode.window.showInformationMessage("API Key salva com segurança!");
 		}
 	});
 

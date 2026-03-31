@@ -18,5 +18,7 @@ export function getMessages(): Message[] {
 }
 
 function trimMessages() {
-	if (messages.length > 20) messages = messages.slice(-20);
+	if (messages.length > 20) {
+		messages = messages.slice(-20);
+	}
 }
